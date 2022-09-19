@@ -17,12 +17,13 @@ import java.util.Date;
 
 public class Prices {
 
-    public static Connection createApp() throws SQLException {
+    public static Connection createApp(int port) throws SQLException {
 
-        final Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/lift_pass", "root", "mysql");
+        final Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/lift_pass?serverTimezone=Europe/Rome", "root", "");
 
-        port(4567);
+        port(port);
 
+        // /prices?type=night&cost=23
         put("/prices", (req, res) -> {
             int liftPassCost = Integer.parseInt(req.queryParams("cost"));
             String liftPassType = req.queryParams("type");
@@ -39,8 +40,11 @@ public class Prices {
             return "";
         });
 
+        // /prices?type=night&age=23&date=2019-02-18
         get("/prices", (req, res) -> {
-            final Integer age = req.queryParams("age") != null ? Integer.valueOf(req.queryParams("age")) : null;
+            final Integer age = req.queryParams("age") != null
+                    ? Integer.valueOf(req.queryParams("age"))
+                    : null;
 
             try (PreparedStatement costStmt = connection.prepareStatement( //
                     "SELECT cost FROM base_price " + //
@@ -105,7 +109,7 @@ public class Prices {
                                 }
                             }
                         } else {
-                            if (age != null && age >= 6) {
+                            if (age != null) {
                                 if (age > 64) {
                                     return "{ \"cost\": " + (int) Math.ceil(result.getInt("cost") * .4) + "}";
                                 } else {
